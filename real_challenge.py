@@ -71,6 +71,7 @@ test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 
 def train_loop(dataloader, model, loss_fn, optimizer):
+    mean_loss = []
     size = len(dataloader.dataset)
     model.train()
     for batch, (X, y) in enumerate(dataloader):
@@ -86,6 +87,8 @@ def train_loop(dataloader, model, loss_fn, optimizer):
         if batch % 64 == 0:
             loss, current = loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            mean_loss.append(loss)
+    return mean_loss
 
 
 __all__ = ['MobileNetV3', 'mobilenetv3']
@@ -328,7 +331,8 @@ epochs = 300
 
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
-    train_loop(train_dataloader, model, loss_fn, optimizer)
+    mean_l = train_loop(train_dataloader, model, loss_fn, optimizer)
+    print(sum(mean_l)/50, sum(mean_l)/49)
     for param_group in optimizer.param_groups:
         print(param_group['lr'])
     scheduler.step()
