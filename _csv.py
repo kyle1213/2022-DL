@@ -14,6 +14,7 @@ from torchsummary import summary as summary_
 
 test_data_npy_path = "D:/datasets/2022_DL_challenge/2022ajouit2/testset.npy"
 x_test = np.load(test_data_npy_path)
+x_test = np.swapaxes(x_test, 1, 2)
 x_test = np.swapaxes(x_test, 1, 3)
 
 

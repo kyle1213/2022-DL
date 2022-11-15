@@ -19,9 +19,9 @@ x = np.load(train_data_npy_path)
 y = np.load(train_label_npy_path)
 x_test = np.load(test_data_npy_path)
 
-#x = np.swapaxes(x, 1, 2)
+x = np.swapaxes(x, 1, 2)
 x = np.swapaxes(x, 1, 3)
-#x_test = np.swapaxes(x_test, 1, 2)
+x_test = np.swapaxes(x_test, 1, 2)
 x_test = np.swapaxes(x_test, 1, 3)
 
 
@@ -199,7 +199,22 @@ class MobileBottleneck(nn.Module):
         else:
             return self.conv(x)
 
-
+"""
+v1
+[
+                # k, exp, c,  se,     nl,  s,
+                [3, 32,  32,  True,  'RE', 2],
+                [3, 32,  32,  False, 'RE', 1],
+                [3, 32,  32,  False, 'RE', 1],
+                [3, 32,  32,  True,  'HS', 2],
+                [3, 32, 32,  True,  'HS', 1],
+                [3, 32, 32,  True,  'HS', 1],
+                [3, 64, 64,  True,  'HS', 2],
+                [3, 64, 64,  True,  'HS', 1],
+                [3, 64, 64,  True,  'HS', 1],
+]
+ + 256 at last(maybe)
+"""
 class MobileNetV3(nn.Module):
     def __init__(self, n_class=100, input_size=32, dropout=0.5, mode='small', width_mult=1.0):
         super(MobileNetV3, self).__init__()
