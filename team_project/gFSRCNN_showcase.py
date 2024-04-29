@@ -60,79 +60,71 @@ if __name__ == '__main__':
     frames = []
 
     while (video.isOpened()):
-        ret, frame = video.read()
+        while cv2.waitKey(1000):
+            ret, frame = video.read()
 
-        frames.append(frame)
-        hr_frames = []
-        if not ret:  # 없으면
-            if len(frames) > 1:
-                frames = frames[:len(frames)-1]
-                for i, f in enumerate(frames):
-                    frame = Image.fromarray(f)
-                    bicubic = np.array(frame.resize((frame.width * scale, frame.height * scale), resample=pil_image.BICUBIC))
-                    frame = rgbpreprocess(frame, device)
+            frames.append(frame)
+            if not ret:  # 없으면
+                if len(frames) > 1:
+                    frames = frames[:len(frames)-1]
+                    for i, f in enumerate(frames):
+                        frame = Image.fromarray(f)
+                        bicubic = np.array(frame.resize((frame.width * scale, frame.height * scale), resample=pil_image.BICUBIC))
+                        frame = rgbpreprocess(frame, device)
 
-                    if i == 0:
-                        inputs = frame
-                        bicubic_frames = np.expand_dims(bicubic, 0)
-                    else:
-                        inputs = torch.cat((inputs, frame))
-                        bicubic_frames = np.append(bicubic_frames, np.expand_dims(bicubic, 0), axis=0)
+                        if i == 0:
+                            inputs = frame
+                            bicubic_frames = np.expand_dims(bicubic, 0)
+                        else:
+                            inputs = torch.cat((inputs, frame))
+                            bicubic_frames = np.append(bicubic_frames, np.expand_dims(bicubic, 0), axis=0)
 
-                hr = main(inputs)
+                    hr = main(inputs)
 
-                for f in range(len(hr)):
-                    cv2.namedWindow('hr', flags=cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(winname='hr', width=852*scale, height=480*scale)
-                    cv2.namedWindow('bicubic', flags=cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(winname='bicubic', width=852*scale, height=480*scale)
-                    cv2.imshow('hr', hr[f])
-                    cv2.imshow('bicubic', bicubic_frames[f])
-                    key = cv2.waitKey(30)
+                    for f in range(len(hr)):
+                        cv2.namedWindow('hr', flags=cv2.WINDOW_NORMAL)
+                        cv2.resizeWindow(winname='hr', width=852*scale, height=480*scale)
+                        cv2.namedWindow('bicubic', flags=cv2.WINDOW_NORMAL)
+                        cv2.resizeWindow(winname='bicubic', width=852*scale, height=480*scale)
+                        cv2.imshow('hr', hr[f])
+                        cv2.imshow('bicubic', bicubic_frames[f])
+                        key = cv2.waitKey(30)
 
-                    if key == ord('q'):
-                        break
+                        if key == ord('q'):
+                            break
 
+                    frames = []
+                    bicubic_frames = []
+
+                    break
+                else:
+                    break
+            start = time.time()
+            for i, f in enumerate(frames):
+                frame = Image.fromarray(f)
+                bicubic = np.array(frame.resize((frame.width * scale, frame.height * scale), resample=pil_image.BICUBIC))
+                frame = rgbpreprocess(frame, device)
+                if i == 0:
+                    inputs = frame
+                    bicubic_frames = np.expand_dims(bicubic, 0)
+                else:
+                    inputs = torch.cat((inputs, frame))
+                    bicubic_frames = np.append(bicubic_frames, np.expand_dims(bicubic, 0), axis=0)
+            hr = main(inputs)
+            print("time :", time.time() - start)  # 현재시각 - 시작시간 = 실행 시
+            for f in range(len(hr)):
+                cv2.namedWindow('hr', flags=cv2.WINDOW_NORMAL)
+                cv2.resizeWindow(winname='hr', width=852*scale, height=480*scale)
+                cv2.namedWindow('bicubic', flags=cv2.WINDOW_NORMAL)
+                cv2.resizeWindow(winname='bicubic', width=852*scale, height=480*scale)
+                cv2.imshow('hr', hr[f])
+                cv2.imshow('bicubic', bicubic_frames[f])
+                key = cv2.waitKey(30)
+                if key == ord('q'):
+                    break
                 frames = []
+                fps = len(bicubic_frames)
                 bicubic_frames = []
-
-                break
-            else:
-                break
-
-        else:
-            if len(frames) == 30:
-                start = time.time()
-                for i, f in enumerate(frames):
-                    frame = Image.fromarray(f)
-                    bicubic = np.array(frame.resize((frame.width * scale, frame.height * scale), resample=pil_image.BICUBIC))
-                    frame = rgbpreprocess(frame, device)
-
-                    if i == 0:
-                        inputs = frame
-                        bicubic_frames = np.expand_dims(bicubic, 0)
-                    else:
-                        inputs = torch.cat((inputs, frame))
-                        bicubic_frames = np.append(bicubic_frames, np.expand_dims(bicubic, 0), axis=0)
-                hr = main(inputs)
-
-                print("time :", time.time() - start)  # 현재시각 - 시작시간 = 실행 시간
-
-                for f in range(len(hr)):
-                    cv2.namedWindow('hr', flags=cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(winname='hr', width=852*scale, height=480*scale)
-                    cv2.namedWindow('bicubic', flags=cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(winname='bicubic', width=852*scale, height=480*scale)
-                    cv2.imshow('hr', hr[f])
-                    cv2.imshow('bicubic', bicubic_frames[f])
-                    key = cv2.waitKey(30)
-
-                    if key == ord('q'):
-                        break
-
-                frames = []
-                bicubic_frames = []
-            else:
-                pass
-        torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
+        print(len(fps))
     video.release()
